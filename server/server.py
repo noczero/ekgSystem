@@ -12,6 +12,7 @@ port = 49877
 #portWS = 49876
 #port = 1883
 logfile = 'ekgSignal-%s-%s-%s.csv' % (dt.day, dt.month, dt.year)
+topic_decision = "rhythm/ECG004/n"
 
 def featureExtraction(signal):
     num_leads = 1
@@ -52,21 +53,28 @@ def testingData(signal,multi_mode,voting_strategy):
         elif voting_strategy == 'ovo_voting_exp':
             predict_ovo, counter = ovo_voting_exp(decision_ovo, 5)
 
-        #print(predict_ovo)
-        #print("Result" + str(predict_ovo))
-        # svm_model.predict_log_proba  svm_model.predict_proba   svm_model.predict ...
-        #perf_measures = compute_AAMI_performance_measures(predict_ovo, labels)
 
+        # check result
         if(predict_ovo[1] == 0.):
             print "Status : Normal"
-            clientMQTT.publish("rhythm/ECG004/n" , "normal")
+            clientMQTT.publish(topic_decision , "normal")
+            return 0
         elif(predict_ovo[1] == 1.):
             print "Status : PVC"
-            clientMQTT.publish("rhythm/ECG004/n", "pvc")
+            clientMQTT.publish(topic_decision, "pvc")
+            return 1
         elif(predict_ovo[1] == 2.):
             print "Status : PAC"
-            clientMQTT.publish("rhythm/ECG004/n", "pac")
-
+            clientMQTT.publish(topic_decision, "pac")
+            return 2
+        elif(predict_ovo[1] == 3.):
+            print "Status : AFIB"
+            clientMQTT.publish(topic_decision, "afib")
+            return 3
+        elif(predict_ovo[1] == 4.):
+            print "Status : Ventricular Tachycardia"
+            clientMQTT.publish(topic_decision, "vt")
+            return 4
 
 
 # csvwrite
@@ -76,6 +84,8 @@ def write_tocsv(data) :
         writer.writerow(data)
 
 #define callback
+temp_result = 99
+count_pvc = 0
 def on_message(client, userdata, message):
     print "message topic=", message.topic , " - qos=", message.qos , " - flag=", message.retain
     receivedMessage = str(message.payload.decode("utf-8"))
@@ -97,7 +107,38 @@ def on_message(client, userdata, message):
     if(len(features) == 180):
         features = features[1:181]
 
-    testingData(features,'ovo','ovo_voting') # testing the signal
+    result = testingData(features,'ovo','ovo_voting') # testing the signal
+
+    global temp_result,count_pvc
+    # check if result is pvc and result before is pvc also then count them for tachycardiac
+    if(result == 1):
+        count_pvc = count_pvc + 1
+        resPVC = count_pvc(count_pvc)
+        temp_result = result
+    else:
+        count_pvc = 0
+
+def countPVC(total):
+    """
+    Count PVC to decide Double, Triple Tachycardia
+    :param total:
+    :return:
+    """
+    if(total == 2):
+        # double
+        print "Status : Double Tachycardia"
+        clientMQTT.publish(topic_decision, "dotac")
+        return 5
+    elif(total == 3):
+        # triple
+        print "Status : Triple Tachycardia"
+        clientMQTT.publish(topic_decision, "tritac")
+        return 6
+    elif (total == 5):
+        # VT
+        print "Status : Ventricular Tachycardia"
+        clientMQTT.publish(topic_decision, "vt")
+        return 4
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+ str(rc))
