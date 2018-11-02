@@ -125,25 +125,43 @@ def write_AAMI_results(performance_measures, filename):
     f.write("Confusion Matrix:"+ "\n\n")
     f.write("\n".join(str(elem) for elem in performance_measures.confusion_matrix.astype(int))+ "\n\n")
 
-    f.write("Overall ACC: " + str(format(performance_measures.Overall_Acc, '.4f'))+ "\n\n")
 
-    f.write("mean Recall: " + str(format(np.average(performance_measures.Recall[:]), '.4f'))+ "\n")
-    f.write("mean Precision: " + str(format(np.average(performance_measures.Precision[:]), '.4f'))+ "\n")
-  
 
     f.write("\nNormal:"+ "\n")
     f.write("Sens: " + str(format(performance_measures.Recall[0], '.4f'))+ "\n")
-    f.write("Prec: " + str(format(performance_measures.Precision[0], '.4f'))+ "\n\n")
+    f.write("Prec: " + str(format(performance_measures.Precision[0], '.4f'))+ "\n")
+    f.write("Spec: " + str(format(performance_measures.Specificity[0], '.4f')) + "\n\n")
 
     f.write("PVC:"+ "\n")
     f.write("Sens: " + str(format(performance_measures.Recall[1], '.4f'))+ "\n")
-    f.write("Prec: " + str(format(performance_measures.Precision[1], '.4f'))+ "\n\n")
+    f.write("Prec: " + str(format(performance_measures.Precision[1], '.4f'))+ "\n")
+    f.write("Spec: " + str(format(performance_measures.Specificity[1], '.4f')) + "\n\n")
+
 
     f.write("PAC:"+ "\n")
     f.write("Sens: " + str(format(performance_measures.Recall[2], '.4f'))+ "\n")
-    f.write("Prec: " + str(format(performance_measures.Precision[2], '.4f'))+ "\n\n")
+    f.write("Prec: " + str(format(performance_measures.Precision[2], '.4f'))+ "\n")
+    f.write("Spec: " + str(format(performance_measures.Specificity[2], '.4f')) + "\n\n")
 
 
+    f.write("AFIB:"+ "\n")
+    f.write("Sens: " + str(format(performance_measures.Recall[3], '.4f'))+ "\n")
+    f.write("Prec: " + str(format(performance_measures.Precision[3], '.4f'))+ "\n")
+    f.write("Spec: " + str(format(performance_measures.Specificity[3], '.4f')) + "\n\n")
 
+
+    f.write("Ventricular Tachycardia:"+ "\n")
+    f.write("Sens: " + str(format(performance_measures.Recall[4], '.4f'))+ "\n")
+    f.write("Prec: " + str(format(performance_measures.Precision[4], '.4f'))+ "\n")
+    f.write("Spec: " + str(format(performance_measures.Specificity[4], '.4f')) + "\n\n")
+
+    f.write("Summary Evaluation: \n")
+    f.write("Overall Accuracy: " + str(format(performance_measures.Overall_Acc, '.4f')) + "\n")
+    sensitifitas = np.mean(performance_measures.Recall)
+    f.write("Sensitivity Avg : " + str(format(sensitifitas, '.4f')) + "\n")
+    prec = np.mean(performance_measures.Precision)
+    f.write("Precision Avg : " + str(format(prec , '.4f')) + "\n")
+    spec = np.mean(performance_measures.Specificity)
+    f.write("Specificity Avg : " + str(format(spec , '.4f')) + "\n")
 
     f.close()

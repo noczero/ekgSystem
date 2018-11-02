@@ -1,0 +1,43 @@
+Ijk: 0.2153
+Ij: 1.0387
+Cohen's Kappa: 0.1708
+
+Confusion Matrix:
+
+[21103  2517  1284     2     3]
+[219 844  18   1   5]
+[1380   24    9    0    0]
+[8 0 0 0 0]
+[1 4 0 0 1]
+
+
+Normal:
+Sens: 0.8472
+Prec: 0.9292
+Spec: 0.3604
+
+PVC:
+Sens: 0.7764
+Prec: 0.2490
+Spec: 0.9034
+
+PAC:
+Sens: 0.0064
+Prec: 0.0069
+Spec: 0.9499
+
+AFIB:
+Sens: 0.0000
+Prec: 0.0000
+Spec: 0.9999
+
+Ventricular Tachycardia:
+Sens: 0.1667
+Prec: 0.1111
+Spec: 0.9997
+
+Summary Evaluation: 
+Overall Accuracy: 0.8007
+Sensitivity Avg : 0.3593
+Precision Avg : 0.2592
+Specificity Avg : 0.8427

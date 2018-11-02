@@ -301,7 +301,7 @@ def main(multi_mode='ovo', winL=90, winR=90, do_preprocess=True, use_weight_clas
 
         else:
             class_weights = {}
-            for c in range(3): #for three classes
+            for c in range(5): #for five classes
                 class_weights.update({c:len(tr_labels) / float(np.count_nonzero(tr_labels == c))})
 
             #class_weight='balanced', 

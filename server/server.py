@@ -5,14 +5,15 @@ import csv
 from train_SVM import *
 
 dt = datetime.datetime.now()
-brokerHost = "192.168.1.2"
-brokerHost = "hantamsurga.net"
+brokerHost = "localhost"
+#brokerHost = "telemedicine.co.id"
 #brokerHost = "192.168.137.158"
-port = 49877
+#port = 49560
 #portWS = 49876
-#port = 1883
-logfile = 'ekgSignal-%s-%s-%s.csv' % (dt.day, dt.month, dt.year)
-topic_decision = "rhythm/ECG004/n"
+port = 1883
+device_id = "ECG001"
+logfile = 'log_csv/ekgSignal-%s-%s-%s-%s-%s.csv' % ("edan", dt.day, dt.month, dt.year, dt.hour)
+topic_decision = "rhythm/"+device_id+"/n"
 
 def featureExtraction(signal):
     num_leads = 1
@@ -78,45 +79,56 @@ def testingData(signal,multi_mode,voting_strategy):
 
 
 # csvwrite
-def write_tocsv(data) :
-    with open(logfile, "a") as output_file:
+def write_tocsv(topic,data) :
+    with open(logfile.replace("edan",topic), "a") as output_file:
         writer = csv.writer(output_file, delimiter=',', lineterminator='\r')
         writer.writerow(data)
 
 #define callback
 temp_result = 99
 count_pvc = 0
+count_pvc_tot= 0
 def on_message(client, userdata, message):
     print "message topic=", message.topic , " - qos=", message.qos , " - flag=", message.retain
-    receivedMessage = str(message.payload.decode("utf-8"))
-    print "received message = " , receivedMessage
+    if ("/ecg" in message.topic):
+        device_topic = message.topic.split("/")[1]
+        print(device_topic)
+        receivedMessage = str(message.payload.decode("utf-8"))
+        print "received message = " , receivedMessage
+        global count_pvc_tot
+        signal = receivedMessage.split(':')
+        #signal[0] = int(time.time())
+        #print(signal)
+        csv_result = []
+        csv_result.append(int(time.time()))
+        #csv_result.append(signal)
 
-    signal = receivedMessage.split(':')
-    #print(signal)
-    write_tocsv(signal) # write signal to CSV
+        # testing features
+        features = np.array([], dtype=float)
+        #convert to float
+        for x in range(len(signal)):
+            # print(float(signal[x]))
+            features = np.hstack((features,float(signal[x])))
+            csv_result.append(signal[x])
 
-    # testing features
-    features = np.array([], dtype=float)
-    #convert to float
-    for x in range(len(signal) - 1):
-        # print(float(signal[x]))
-        features = np.hstack((features,float(signal[x])))
-    #features = np.vstack((features,features)) #become 2 d array
+        # check if features coming with id then don't use the id
+        if(len(features) == 180):
+            features = features[1:181]
 
-    #print(features[0][1:181])
-    if(len(features) == 180):
-        features = features[1:181]
+        result = testingData(features,'ovo','ovo_voting_exp') # testing the signal
 
-    result = testingData(features,'ovo','ovo_voting') # testing the signal
-
-    global temp_result,count_pvc
-    # check if result is pvc and result before is pvc also then count them for tachycardiac
-    if(result == 1):
-        count_pvc = count_pvc + 1
-        resPVC = count_pvc(count_pvc)
-        temp_result = result
-    else:
-        count_pvc = 0
+        global temp_result,count_pvc
+        # check if result is pvc and result before is pvc also then count them for tachycardiac
+        if(result == 1):
+            count_pvc_tot = count_pvc_tot + 1
+            resPVC = countPVC(count_pvc_tot)
+            temp_result = result
+            csv_result.append(resPVC)
+            write_tocsv(device_topic, csv_result)
+        else:
+            count_pvc_tot = 0
+            csv_result.append(result)
+            write_tocsv(device_topic, csv_result)  # write signal to CSV
 
 def countPVC(total):
     """
@@ -144,7 +156,7 @@ def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+ str(rc))
     # subscribe the topic "ekg/device1/signal"
     # subTopic = "ekg/+/signal"  # + is wildcard for all string to that level
-    subTopic = "rhythm/ECG004/ecg"
+    subTopic = "rhythm/#"
     print "Subscribe topic ", subTopic
     clientMQTT.subscribe(subTopic)
 
@@ -162,7 +174,7 @@ clientMQTT.connect(brokerHost,port) # connect to broker
 clientMQTT.loop_forever() # loop forever
 
 
-
+print(int(time.time()))
 
 
 

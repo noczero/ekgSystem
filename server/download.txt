@@ -1,0 +1,5 @@
+rdsamp -r mitdb/101 -c -H -f 0 -t 60 -v -PS >samples.csv (high precision)
+
+rdsamp -r mitdb/100 -c -H -f 0 -t 60 -v >samples.csv (raw signal)
+
+rdsamp -r mitdb/101 -c -H -f 0 -t 60 -v -pS >samples.csv (standard)
